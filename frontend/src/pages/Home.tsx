@@ -11,27 +11,15 @@ export default function Home() {
   const fetchURLs = async () => {
     const res = await fetch(`${API_BASE}/urls`)
     const data = await res.json()
+    data.sort((a: URLInfo, b: URLInfo) => a.id.localeCompare(b.id))
     setUrls(data)
   }
 
   useEffect(() => {
-    fetchURLs()
+    fetchURLs() // Initial fetch
+    const interval = setInterval(fetchURLs, 2000) // Global polling every 2 seconds
+    return () => clearInterval(interval)
   }, [])
-
-  // Poll 1 URL's status updates every 2 seconds until done/error
-  const pollForStatusUpdate = (id: string) => {
-    const interval = setInterval(async () => {
-      const res = await fetch(`${API_BASE}/urls`)
-      const data: URLInfo[] = await res.json()
-      const updated = data.find((u) => u.id === id)
-      if (!updated) return
-      setUrls((prev) => prev.map((u) => (u.id === id ? updated : u)))
-
-      if (updated.status === "done" || updated.status === "error") {
-        clearInterval(interval)
-      }
-    }, 2000)
-  }
 
   const handleAdd = async (url: string) => {
     try {
@@ -42,19 +30,45 @@ export default function Home() {
       })
 
       if (!res.ok) {
-        console.log(res.json());
+        console.log(await res.json())
         return
       }
 
       const newURL: URLInfo = await res.json()
-
-      // Add newly queued URL immediately to the list
       setUrls((prev) => [...prev, newURL])
-
-      // Start polling for this URL's status updates
-      pollForStatusUpdate(newURL.id)
+      // No need to poll individually, global polling will update status
     } catch (error) {
       console.error("Failed to add URL:", error)
+    }
+  }
+
+  const handleStart = async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/urls/${id}/reanalyze`, {
+        method: "POST",
+      })
+      if (!res.ok) throw new Error("Failed to start reanalyze")
+
+      const updatedURL: URLInfo = await res.json()
+      setUrls((prev) => prev.map((u) => (u.id === id ? updatedURL : u)))
+      // Global polling will update status continuously
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleStop = async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/urls/${id}/stop`, {
+        method: "POST",
+      })
+      if (!res.ok) throw new Error("Failed to stop")
+
+      const updatedURL: URLInfo = await res.json()
+      setUrls((prev) => prev.map((u) => (u.id === id ? updatedURL : u)))
+      // Global polling will keep refreshing the status, no per-URL polling to clear
+    } catch (error) {
+      console.error(error)
     }
   }
 
@@ -62,7 +76,7 @@ export default function Home() {
     <div className="max-w-5xl mx-auto space-y-8">
       <h1 className="text-3xl font-bold text-center">Website Crawler</h1>
       <URLForm onSubmit={handleAdd} />
-      <ResultsTable urls={urls} />
+      <ResultsTable urls={urls} onStart={handleStart} onStop={handleStop} />
     </div>
   )
 }

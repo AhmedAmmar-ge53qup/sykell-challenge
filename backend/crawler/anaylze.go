@@ -1,17 +1,22 @@
 package crawler
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"strings"
-
 	"urlcrawler/models"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
-func Analyze(rawURL string) (models.URLInfo, error) {
-	resp, err := http.Get(rawURL)
+func Analyze(ctx context.Context, rawURL string) (models.URLInfo, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", rawURL, nil)
+	if err != nil {
+		return models.URLInfo{URL: rawURL, Status: "error"}, err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return models.URLInfo{URL: rawURL, Status: "error"}, err
 	}
@@ -32,18 +37,24 @@ func Analyze(rawURL string) (models.URLInfo, error) {
 	info.HTMLVersion = detectHTMLVersion(resp)
 	info.Title = doc.Find("title").Text()
 
+	// Count headings h1..h6
 	for i := 1; i <= 6; i++ {
 		tag := "h" + string(rune('0'+i))
 		info.Headings[strings.ToUpper(tag)] = doc.Find(tag).Length()
 	}
 
-	doc.Find("a[href]").Each(func(i int, s *goquery.Selection) {
-		href, exists := s.Attr("href")
-		if !exists {
-			return
+	// Check links with cancellation support
+	doc.Find("a[href]").EachWithBreak(func(i int, s *goquery.Selection) bool {
+		select {
+		case <-ctx.Done():
+			// stop iteration if canceled
+			return false
+		default:
 		}
-		if strings.HasPrefix(href, "#") || href == "" {
-			return
+
+		href, exists := s.Attr("href")
+		if !exists || href == "" || strings.HasPrefix(href, "#") {
+			return true
 		}
 
 		absolute := resolveLink(rawURL, href)
@@ -53,7 +64,7 @@ func Analyze(rawURL string) (models.URLInfo, error) {
 			info.ExternalLinks++
 		}
 
-		code := checkLink(absolute)
+		code := checkLinkWithContext(ctx, absolute)
 		if code >= 400 {
 			info.BrokenLinks = append(info.BrokenLinks, models.BrokenLink{
 				URL:    absolute,
@@ -63,6 +74,7 @@ func Analyze(rawURL string) (models.URLInfo, error) {
 			info.AccessibleLinks++
 		}
 
+		return true
 	})
 
 	info.HasLoginForm = doc.Find(`form input[type="password"]`).Length() > 0
@@ -93,8 +105,14 @@ func isInternalLink(baseURL, link string) bool {
 	return base.Hostname() == dest.Hostname()
 }
 
-func checkLink(link string) int {
-	resp, err := http.Head(link)
+// context-aware link checker
+func checkLinkWithContext(ctx context.Context, link string) int {
+	req, err := http.NewRequestWithContext(ctx, "HEAD", link, nil)
+	if err != nil {
+		return 500
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return 500
 	}
