@@ -8,6 +8,8 @@ export default function URLForm({ onSubmit }: { onSubmit: (url: string) => void 
         const url = Object.fromEntries(formData).url
         if (!url) return
         onSubmit(url as string)
+
+        e.currentTarget.reset();
       }}
       className="flex gap-4"
     >

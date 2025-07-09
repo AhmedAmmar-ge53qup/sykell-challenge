@@ -1,9 +1,14 @@
+import { BrowserRouter, Route, Routes } from "react-router";
 import Home from "./pages/Home"
+import Details from "./pages/Details";
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <Home />
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/details/:id" element={<Details />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }

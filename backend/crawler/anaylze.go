@@ -59,7 +59,10 @@ func Analyze(rawURL string) (models.URLInfo, error) {
 				URL:    absolute,
 				Status: code,
 			})
+		} else {
+			info.AccessibleLinks++
 		}
+
 	})
 
 	info.HasLoginForm = doc.Find(`form input[type="password"]`).Length() > 0
