@@ -11,6 +11,8 @@ func main() {
 
 	r.GET("/urls", handlers.GetAllURLs)
 	r.POST("/urls", handlers.PostURL)
+	r.DELETE("/urls/:id", handlers.DeleteURL)
+	r.PUT("/urls/:id/reanalyze", handlers.ReanalyzeURL)
 
 	r.Run(":8080")
 }

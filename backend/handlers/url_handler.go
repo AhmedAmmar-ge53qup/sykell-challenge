@@ -32,3 +32,31 @@ func PostURL(c *gin.Context) {
 	storage.SaveURL(info)
 	c.JSON(http.StatusCreated, info)
 }
+
+func DeleteURL(c *gin.Context) {
+	id := c.Param("id")
+	success := storage.DeleteURL(id)
+	if success {
+		c.Status(http.StatusNoContent)
+	} else {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+	}
+}
+
+func ReanalyzeURL(c *gin.Context) {
+	id := c.Param("id")
+	existing, found := storage.GetURLByID(id)
+	if !found {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	info, err := crawler.Analyze(existing.URL)
+	info.ID = id
+	if err != nil {
+		info.Status = "error"
+	}
+
+	storage.UpdateURL(id, info)
+	c.JSON(http.StatusOK, info)
+}
