@@ -3,11 +3,15 @@ package main
 import (
 	"urlcrawler/handlers"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	r := gin.Default()
+
+	// Allow all origins for now.
+	r.Use(cors.Default())
 
 	r.GET("/urls", handlers.GetAllURLs)
 	r.POST("/urls", handlers.PostURL)
