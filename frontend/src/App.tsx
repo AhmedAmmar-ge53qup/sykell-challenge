@@ -1,8 +1,9 @@
-function App() {
+import Home from "./pages/Home"
 
+export default function App() {
   return (
-    <h1 className="bg-amber-400">Test</h1>
+    <div className="min-h-screen bg-gray-100 p-4">
+      <Home />
+    </div>
   )
 }
-
-export default App
