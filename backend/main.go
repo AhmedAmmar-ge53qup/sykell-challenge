@@ -14,6 +14,7 @@ func main() {
 	r.Use(cors.Default())
 
 	r.GET("/urls", handlers.GetAllURLs)
+	r.GET("/api/urls/:id", handlers.GetURLByID)
 	r.POST("/urls", handlers.PostURL)
 	r.DELETE("/urls/:id", handlers.DeleteURL)
 	r.PUT("/urls/:id/reanalyze", handlers.ReanalyzeURL)

@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"urlcrawler/crawler"
+	"urlcrawler/models"
 	"urlcrawler/storage"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,16 @@ func GetAllURLs(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
+func GetURLByID(c *gin.Context) {
+	id := c.Param("id")
+	info, found := storage.GetURLByID(id)
+	if !found {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+	c.JSON(http.StatusOK, info)
+}
+
 func PostURL(c *gin.Context) {
 	var payload struct {
 		URL string `json:"url"`
@@ -22,15 +33,38 @@ func PostURL(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
 		return
 	}
-	id := uuid.New().String()
-	info, err := crawler.Analyze(payload.URL)
-	info.ID = id
-	if err != nil {
-		info.Status = "error"
-	}
 
-	storage.SaveURL(info)
-	c.JSON(http.StatusCreated, info)
+	id := uuid.New().String()
+
+	// Save placeholder with status "queued"
+	queuedInfo := models.URLInfo{
+		ID:     id,
+		URL:    payload.URL,
+		Status: "queued",
+	}
+	storage.SaveURL(queuedInfo)
+
+	// Crawl in background
+	go func() {
+		// Update status to "running" before starting analysis
+		runningInfo := queuedInfo
+		runningInfo.Status = "running"
+		storage.UpdateURL(id, runningInfo)
+
+		// Perform crawl
+		result, err := crawler.Analyze(payload.URL)
+		result.ID = id
+		if err != nil {
+			result.Status = "error"
+		} else {
+			result.Status = "done"
+		}
+
+		storage.UpdateURL(id, result)
+	}()
+
+	// Respond immediately
+	c.JSON(http.StatusAccepted, queuedInfo)
 }
 
 func DeleteURL(c *gin.Context) {

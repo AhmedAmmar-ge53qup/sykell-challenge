@@ -18,13 +18,44 @@ export default function Home() {
     fetchURLs()
   }, [])
 
+  // Poll 1 URL's status updates every 2 seconds until done/error
+  const pollForStatusUpdate = (id: string) => {
+    const interval = setInterval(async () => {
+      const res = await fetch(`${API_BASE}/urls`)
+      const data: URLInfo[] = await res.json()
+      const updated = data.find((u) => u.id === id)
+      if (!updated) return
+      setUrls((prev) => prev.map((u) => (u.id === id ? updated : u)))
+
+      if (updated.status === "done" || updated.status === "error") {
+        clearInterval(interval)
+      }
+    }, 2000)
+  }
+
   const handleAdd = async (url: string) => {
-    await fetch(`${API_BASE}/urls`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    })
-    await fetchURLs()
+    try {
+      const res = await fetch(`${API_BASE}/urls`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      })
+
+      if (!res.ok) {
+        console.log(res.json());
+        return
+      }
+
+      const newURL: URLInfo = await res.json()
+
+      // Add newly queued URL immediately to the list
+      setUrls((prev) => [...prev, newURL])
+
+      // Start polling for this URL's status updates
+      pollForStatusUpdate(newURL.id)
+    } catch (error) {
+      console.error("Failed to add URL:", error)
+    }
   }
 
   return (
