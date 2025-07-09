@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"net/http"
-	"urlcrawler/models"
+	"urlcrawler/crawler"
 	"urlcrawler/storage"
 
 	"github.com/gin-gonic/gin"
@@ -23,11 +23,12 @@ func PostURL(c *gin.Context) {
 		return
 	}
 	id := uuid.New().String()
-	info := models.URLInfo{
-		ID:     id,
-		URL:    payload.URL,
-		Status: "queued",
+	info, err := crawler.Analyze(payload.URL)
+	info.ID = id
+	if err != nil {
+		info.Status = "error"
 	}
+
 	storage.SaveURL(info)
 	c.JSON(http.StatusCreated, info)
 }
