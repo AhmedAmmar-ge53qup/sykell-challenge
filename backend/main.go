@@ -2,15 +2,16 @@ package main
 
 import (
 	"urlcrawler/handlers"
+	"urlcrawler/storage"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	r := gin.Default()
+	storage.InitDB()
 
-	// Allow all origins for now.
+	r := gin.Default()
 	r.Use(cors.Default())
 
 	r.GET("/urls", handlers.GetAllURLs)
