@@ -1,54 +1,80 @@
-import type { URLInfo } from "../types"
-import { useNavigate } from "react-router"
+import type { URLInfo } from "../types";
+import { useNavigate } from "react-router";
 
 type Props = {
-  urls: URLInfo[]
-  onStart: (id: string) => void
-  onStop: (id: string) => void
-  onSort: (key: keyof URLInfo) => void
-  sortKey: keyof URLInfo | null
-  sortDirection: "asc" | "desc"
-}
+  urls: URLInfo[];
+  onStart: (id: string) => void;
+  onStop: (id: string) => void;
+  onSort: (key: keyof URLInfo) => void;
+  onDelete: (id: string) => void;
+  sortKey: keyof URLInfo | null;
+  sortDirection: "asc" | "desc";
+};
 
 export default function ResultsTable({
   urls,
   onStart,
   onStop,
   onSort,
+  onDelete,
   sortKey,
   sortDirection,
 }: Props) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const renderSortIndicator = (key: keyof URLInfo) =>
-    sortKey === key ? (sortDirection === "asc" ? " ▲" : " ▼") : ""
+    sortKey === key ? (sortDirection === "asc" ? " ▲" : " ▼") : "";
 
   return (
     <table className="min-w-full table-auto text-sm">
       <thead>
         <tr className="bg-gray-200 text-gray-700">
-          <th className="text-left p-2 cursor-pointer" onClick={() => onSort("url")}>
+          <th
+            className="text-left p-2 cursor-pointer"
+            onClick={() => onSort("url")}
+          >
             URL{renderSortIndicator("url")}
           </th>
-          <th className="text-left p-2 cursor-pointer" onClick={() => onSort("title")}>
+          <th
+            className="text-left p-2 cursor-pointer"
+            onClick={() => onSort("title")}
+          >
             Title{renderSortIndicator("title")}
           </th>
-          <th className="text-left p-2 cursor-pointer" onClick={() => onSort("html_version")}>
+          <th
+            className="text-left p-2 cursor-pointer"
+            onClick={() => onSort("html_version")}
+          >
             HTML Version{renderSortIndicator("html_version")}
           </th>
-          <th className="text-left p-2 cursor-pointer" onClick={() => onSort("internal_links")}>
+          <th
+            className="text-left p-2 cursor-pointer"
+            onClick={() => onSort("internal_links")}
+          >
             Internal{renderSortIndicator("internal_links")}
           </th>
-          <th className="text-left p-2 cursor-pointer" onClick={() => onSort("external_links")}>
+          <th
+            className="text-left p-2 cursor-pointer"
+            onClick={() => onSort("external_links")}
+          >
             External{renderSortIndicator("external_links")}
           </th>
-          <th className="text-left p-2 cursor-pointer" onClick={() => onSort("accessible_links")}>
+          <th
+            className="text-left p-2 cursor-pointer"
+            onClick={() => onSort("accessible_links")}
+          >
             Accessible{renderSortIndicator("accessible_links")}
           </th>
-          <th className="text-left p-2 cursor-pointer" onClick={() => onSort("has_login_form")}>
+          <th
+            className="text-left p-2 cursor-pointer"
+            onClick={() => onSort("has_login_form")}
+          >
             Login{renderSortIndicator("has_login_form")}
           </th>
-          <th className="text-left p-2 cursor-pointer" onClick={() => onSort("status")}>
+          <th
+            className="text-left p-2 cursor-pointer"
+            onClick={() => onSort("status")}
+          >
             Status{renderSortIndicator("status")}
           </th>
           <th className="text-left p-2">Actions</th>
@@ -63,7 +89,9 @@ export default function ResultsTable({
             >
               {url.url}
             </td>
-            <td>{url.title || <em className="text-gray-400">(no title)</em>}</td>
+            <td>
+              {url.title || <em className="text-gray-400">(no title)</em>}
+            </td>
             <td>{url.html_version || "–"}</td>
             <td>{url.internal_links}</td>
             <td>{url.external_links}</td>
@@ -93,10 +121,16 @@ export default function ResultsTable({
                   Stop
                 </button>
               )}
+              <button
+                className="text-red-700 hover:underline"
+                onClick={() => onDelete(url.id)}
+              >
+                Delete
+              </button>
             </td>
           </tr>
         ))}
       </tbody>
     </table>
-  )
+  );
 }

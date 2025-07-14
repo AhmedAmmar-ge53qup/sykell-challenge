@@ -1,71 +1,78 @@
-import { useState, useMemo } from "react"
-import type { URLInfo } from "../types"
-import ResultsTable from "./ResultsTable"
+import { useState, useMemo } from "react";
+import type { URLInfo } from "../types";
+import ResultsTable from "./ResultsTable";
 
 type Props = {
-  urls: URLInfo[]
-  onStart: (id: string) => void
-  onStop: (id: string) => void
-}
+  urls: URLInfo[];
+  onStart: (id: string) => void;
+  onStop: (id: string) => void;
+  onDelete: (id: string) => void;
+};
 
-type SortKey = keyof URLInfo | null
+type SortKey = keyof URLInfo | null;
 
-export default function PaginatedTableWrapper({ urls, onStart, onStop }: Props) {
-  const [sortKey, setSortKey] = useState<SortKey>(null)
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [rowsPerPage, setRowsPerPage] = useState(5)
-  const [searchTerm, setSearchTerm] = useState("")
+export default function PaginatedTableWrapper({
+  urls,
+  onStart,
+  onStop,
+  onDelete,
+}: Props) {
+  const [sortKey, setSortKey] = useState<SortKey>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
-      setSortKey(key)
-      setSortDirection("asc")
+      setSortKey(key);
+      setSortDirection("asc");
     }
-    setCurrentPage(1)
-  }
+    setCurrentPage(1);
+  };
 
   const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Math.max(1, parseInt(e.target.value) || 1)
-    setRowsPerPage(value)
-    setCurrentPage(1)
-  }
+    const value = Math.max(1, parseInt(e.target.value) || 1);
+    setRowsPerPage(value);
+    setCurrentPage(1);
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value)
-    setCurrentPage(1)
-  }
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
 
   const filteredUrls = useMemo(() => {
-    const lower = searchTerm.toLowerCase()
-    return urls.filter((url) =>
-      url.url.toLowerCase().includes(lower) ||
-      (url.title?.toLowerCase().includes(lower) ?? false)
-    )
-  }, [urls, searchTerm])
+    const lower = searchTerm.toLowerCase();
+    return urls.filter(
+      (url) =>
+        url.url?.toLowerCase().includes(lower) ||
+        (url.title?.toLowerCase().includes(lower) ?? false)
+    );
+  }, [urls, searchTerm]);
 
   const sortedUrls = useMemo(() => {
-    if (!sortKey) return filteredUrls
+    if (!sortKey) return filteredUrls;
     return [...filteredUrls].sort((a, b) => {
-      const valA = a[sortKey]
-      const valB = b[sortKey]
+      const valA = a[sortKey];
+      const valB = b[sortKey];
       if (typeof valA === "number" && typeof valB === "number") {
-        return sortDirection === "asc" ? valA - valB : valB - valA
+        return sortDirection === "asc" ? valA - valB : valB - valA;
       }
       return sortDirection === "asc"
         ? String(valA).localeCompare(String(valB))
-        : String(valB).localeCompare(String(valA))
-    })
-  }, [filteredUrls, sortKey, sortDirection])
+        : String(valB).localeCompare(String(valA));
+    });
+  }, [filteredUrls, sortKey, sortDirection]);
 
-  const totalPages = Math.ceil(sortedUrls.length / rowsPerPage)
+  const totalPages = Math.ceil(sortedUrls.length / rowsPerPage);
 
   const paginatedUrls = useMemo(() => {
-    const start = (currentPage - 1) * rowsPerPage
-    return sortedUrls.slice(start, start + rowsPerPage)
-  }, [sortedUrls, currentPage, rowsPerPage])
+    const start = (currentPage - 1) * rowsPerPage;
+    return sortedUrls.slice(start, start + rowsPerPage);
+  }, [sortedUrls, currentPage, rowsPerPage]);
 
   return (
     <div className="overflow-x-auto bg-white rounded-xl shadow space-y-4">
@@ -97,6 +104,7 @@ export default function PaginatedTableWrapper({ urls, onStart, onStop }: Props) 
         onStart={onStart}
         onStop={onStop}
         onSort={handleSort}
+        onDelete={onDelete}
         sortKey={sortKey}
         sortDirection={sortDirection}
       />
@@ -121,5 +129,5 @@ export default function PaginatedTableWrapper({ urls, onStart, onStop }: Props) 
         </button>
       </div>
     </div>
-  )
+  );
 }
