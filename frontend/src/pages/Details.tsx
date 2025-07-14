@@ -8,16 +8,27 @@ const COLORS = ["#4ade80", "#60a5fa"];
 export default function Details() {
   const { id } = useParams();
   const [urlInfo, setUrlInfo] = useState<URLInfo | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`http://localhost:8080/urls`) // Get all, then filter
-      .then((res) => res.json())
-      .then((data) => {
-        const item = data.find((u: URLInfo) => u.id === id);
-        setUrlInfo(item || null);
-      });
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`http://localhost:8080/urls/${id}`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch URL details: ${res.statusText}`);
+        }
+        const data = await res.json();
+        setUrlInfo(data);
+      } catch (err: unknown) {
+        if (err instanceof Error) setError(err.message);
+        else setError("Unknown error");
+      }
+    };
+
+    fetchData();
   }, [id]);
 
+  if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
   if (!urlInfo) return <div className="p-4">Loading...</div>;
 
   const pieData = [
@@ -50,21 +61,33 @@ export default function Details() {
         </PieChart>
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow">
-        <h2 className="text-xl font-semibold mb-2">Broken Links</h2>
-        {urlInfo.broken_links.length === 0 ? (
-          <p className="text-gray-500">No broken links found.</p>
-        ) : (
-          <ul className="list-disc pl-6 space-y-1">
-            {urlInfo.broken_links.map((link, idx) => (
-              <li key={idx}>
-                <span className="text-red-600 font-medium">{link.status}</span>{" "}
-                - <a href={link.url} className="text-blue-500" target="_blank" rel="noreferrer">{link.url}</a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {urlInfo && urlInfo.broken_links && (
+        <div className="bg-white p-4 rounded-xl shadow">
+          <h2 className="text-xl font-semibold mb-2">Broken Links</h2>
+          {urlInfo.broken_links.length === 0 ? (
+            <p className="text-gray-500">No broken links found.</p>
+          ) : (
+            <ul className="list-disc pl-6 space-y-1">
+              {urlInfo.broken_links.map((link, idx) => (
+                <li key={idx}>
+                  <span className="text-red-600 font-medium">
+                    {link.status}
+                  </span>{" "}
+                  -{" "}
+                  <a
+                    href={link.url}
+                    className="text-blue-500"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {link.url}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }

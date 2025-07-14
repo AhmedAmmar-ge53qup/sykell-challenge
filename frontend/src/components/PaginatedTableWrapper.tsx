@@ -24,9 +24,9 @@ export default function PaginatedTableWrapper({
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
+    if (sortKey === key)
       setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
-    } else {
+    else {
       setSortKey(key);
       setSortDirection("asc");
     }
