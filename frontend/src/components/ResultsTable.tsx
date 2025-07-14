@@ -1,3 +1,4 @@
+// ResultsTable.tsx
 import type { URLInfo } from "../types";
 import { useNavigate } from "react-router";
 
@@ -9,6 +10,10 @@ type Props = {
   onDelete: (id: string) => void;
   sortKey: keyof URLInfo | null;
   sortDirection: "asc" | "desc";
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+  onToggleSelectAll: () => void;
+  allSelected: boolean;
 };
 
 export default function ResultsTable({
@@ -19,6 +24,10 @@ export default function ResultsTable({
   onDelete,
   sortKey,
   sortDirection,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
+  allSelected,
 }: Props) {
   const navigate = useNavigate();
 
@@ -29,6 +38,13 @@ export default function ResultsTable({
     <table className="min-w-full table-auto text-sm">
       <thead>
         <tr className="bg-gray-200 text-gray-700">
+          <th className="p-2">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={onToggleSelectAll}
+            />
+          </th>
           <th
             className="text-left p-2 cursor-pointer"
             onClick={() => onSort("url")}
@@ -83,6 +99,13 @@ export default function ResultsTable({
       <tbody>
         {urls.map((url) => (
           <tr key={url.id} className="border-t hover:bg-gray-50">
+            <td className="p-2">
+              <input
+                type="checkbox"
+                checked={selectedIds.has(url.id)}
+                onChange={() => onToggleSelect(url.id)}
+              />
+            </td>
             <td
               className="p-2 text-blue-600 hover:underline cursor-pointer"
               onClick={() => navigate(`/details/${url.id}`)}

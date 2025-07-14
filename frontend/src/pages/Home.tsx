@@ -15,8 +15,8 @@ export default function Home() {
         headers: { "X-API-SECRET": SECRET_KEY },
       });
       const data = await res.json();
-      data.sort((a: URLInfo, b: URLInfo) => a.id.localeCompare(b.id)); // Making sure URLs appear in the same order every re-fetch
-      setUrls(data);
+      data?.sort((a: URLInfo, b: URLInfo) => a.id.localeCompare(b.id)); // Making sure URLs appear in the same order every re-fetch
+      setUrls(data || []);
     };
     fetchURLs(); // Initial fetch
     const interval = setInterval(fetchURLs, 2000); // Global polling every 2 seconds
@@ -83,7 +83,6 @@ export default function Home() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this URL?")) return;
     const res = await fetch(`${API_BASE}/urls/${id}`, {
       method: "DELETE",
       headers: { "X-API-SECRET": SECRET_KEY },
