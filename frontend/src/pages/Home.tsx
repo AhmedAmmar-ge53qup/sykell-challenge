@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import type { URLInfo } from "../types"
 import URLForm from "../components/URLForm"
-import ResultsTable from "../components/ResultsTable"
+import PaginatedTableWrapper from "../components/PaginatedTableWrapper"
 
 const API_BASE = "http://localhost:8080"
 
@@ -73,7 +73,7 @@ export default function Home() {
     <div className="max-w-5xl mx-auto space-y-8">
       <h1 className="text-3xl font-bold text-center">Website Crawler</h1>
       <URLForm onSubmit={handleAdd} />
-      <ResultsTable urls={urls} onStart={handleStart} onStop={handleStop} />
+      <PaginatedTableWrapper urls={urls} onStart={handleStart} onStop={handleStop} />
     </div>
   )
 }
