@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 import { useParams } from "react-router";
 
 const COLORS = ["#4ade80", "#60a5fa"];
+const SECRET_KEY = import.meta.env.VITE_SECRET_KEY; // In a real application, this will be handled differently !!
 
 export default function Details() {
   const { id } = useParams();
@@ -13,7 +14,9 @@ export default function Details() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/urls/${id}`);
+        const res = await fetch(`http://localhost:8080/urls/${id}`, {
+          headers: { "X-API-SECRET": SECRET_KEY },
+        });
         if (!res.ok) {
           throw new Error(`Failed to fetch URL details: ${res.statusText}`);
         }

@@ -4,13 +4,16 @@ import URLForm from "../components/URLForm";
 import PaginatedTableWrapper from "../components/PaginatedTableWrapper";
 
 const API_BASE = "http://localhost:8080";
+const SECRET_KEY = import.meta.env.VITE_SECRET_KEY; // In a real application, this will be handled differently !!
 
 export default function Home() {
   const [urls, setUrls] = useState<URLInfo[]>([]);
 
   useEffect(() => {
     const fetchURLs = async () => {
-      const res = await fetch(`${API_BASE}/urls`);
+      const res = await fetch(`${API_BASE}/urls`, {
+        headers: { "X-API-SECRET": SECRET_KEY },
+      });
       const data = await res.json();
       data.sort((a: URLInfo, b: URLInfo) => a.id.localeCompare(b.id)); // Making sure URLs appear in the same order every re-fetch
       setUrls(data);
@@ -24,7 +27,10 @@ export default function Home() {
     try {
       const res = await fetch(`${API_BASE}/urls`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-SECRET": SECRET_KEY,
+        },
         body: JSON.stringify({ url }),
       });
 
@@ -44,6 +50,7 @@ export default function Home() {
     try {
       const res = await fetch(`${API_BASE}/urls/${id}/reanalyze`, {
         method: "POST",
+        headers: { "X-API-SECRET": SECRET_KEY },
       });
       if (!res.ok) {
         console.log(await res.json());
@@ -61,6 +68,7 @@ export default function Home() {
     try {
       const res = await fetch(`${API_BASE}/urls/${id}/stop`, {
         method: "POST",
+        headers: { "X-API-SECRET": SECRET_KEY },
       });
       if (!res.ok) {
         console.log(await res.json());
@@ -76,7 +84,10 @@ export default function Home() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this URL?")) return;
-    const res = await fetch(`${API_BASE}/urls/${id}`, { method: "DELETE" });
+    const res = await fetch(`${API_BASE}/urls/${id}`, {
+      method: "DELETE",
+      headers: { "X-API-SECRET": SECRET_KEY },
+    });
     if (res.ok) setUrls((prev) => prev.filter((url) => url.id !== id));
     else alert("Failed to delete URL");
   };
