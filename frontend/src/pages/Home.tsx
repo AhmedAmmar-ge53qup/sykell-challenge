@@ -36,7 +36,6 @@ export default function Home() {
 
       const newURL: URLInfo = await res.json()
       setUrls((prev) => [...prev, newURL])
-      // No need to poll individually, global polling will update status
     } catch (error) {
       console.error("Failed to add URL:", error)
     }
@@ -51,7 +50,6 @@ export default function Home() {
 
       const updatedURL: URLInfo = await res.json()
       setUrls((prev) => prev.map((u) => (u.id === id ? updatedURL : u)))
-      // Global polling will update status continuously
     } catch (error) {
       console.error(error)
     }
@@ -66,7 +64,6 @@ export default function Home() {
 
       const updatedURL: URLInfo = await res.json()
       setUrls((prev) => prev.map((u) => (u.id === id ? updatedURL : u)))
-      // Global polling will keep refreshing the status, no per-URL polling to clear
     } catch (error) {
       console.error(error)
     }
